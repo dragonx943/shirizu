@@ -8,31 +8,31 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("org.jetbrains.kotlin.kapt")
     id("org.jetbrains.kotlin.plugin.parcelize")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
     id("com.mikepenz.aboutlibraries.plugin")
     id("dagger.hilt.android.plugin")
 }
 
 val acraAuthLogin: String =
-    gradleLocalProperties(rootDir).getProperty("authLogin") ?: "\"acra_login\""
+    gradleLocalProperties(rootDir, providers).getProperty("authLogin") ?: "\"acra_login\""
 val acraAuthPassword: String =
-    gradleLocalProperties(rootDir).getProperty("authPassword") ?: "\"acra_password\""
+    gradleLocalProperties(rootDir, providers).getProperty("authPassword") ?: "\"acra_password\""
 
 val shikimoriClientId: String =
-    gradleLocalProperties(rootDir).getProperty("shikimoriClientId") ?: "\"shikimori\""
+    gradleLocalProperties(rootDir, providers).getProperty("shikimoriClientId") ?: "\"shikimori\""
 val shikimoriClientSecret: String =
-    gradleLocalProperties(rootDir).getProperty("shikimoriClientSecret") ?: "\"shikimori\""
+    gradleLocalProperties(rootDir, providers).getProperty("shikimoriClientSecret") ?: "\"shikimori\""
 
 android {
     namespace = "org.xtimms.shirizu"
-    compileSdk = 34
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "org.xtimms.shirizu"
-        minSdk = 26
-        targetSdk = 34
+        minSdk = 21
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -53,6 +53,7 @@ android {
         }
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
+            arg("hilt.enableKsp", "true")
         }
     }
 
@@ -93,19 +94,16 @@ android {
     }
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
         viewBinding = true
         buildConfig = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
     }
     packaging {
         resources {
@@ -114,9 +112,6 @@ android {
     }
     androidResources {
         generateLocaleConfig = true
-    }
-    kapt {
-        correctErrorTypes = true
     }
 }
 
@@ -169,10 +164,10 @@ dependencies {
     implementation("com.google.accompanist:accompanist-pager:0.32.0")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.32.0")
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-compiler:2.51.1")
+    implementation("com.google.dagger:hilt-android:2.56")
+    ksp("com.google.dagger:hilt-compiler:2.56")
     implementation("androidx.hilt:hilt-work:1.2.0")
-    kapt("androidx.hilt:hilt-compiler:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
     implementation("com.github.KotatsuApp:kotatsu-parsers:b404b44008") {
         exclude(group = "org.json", module = "json")
     }
@@ -185,15 +180,15 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("io.coil-kt:coil-compose:2.5.0")
-    implementation("me.saket.telephoto:zoomable-image-coil:0.8.0")
+    implementation("me.saket.telephoto:zoomable-image-coil:0.19.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("com.squareup.moshi:moshi-kotlin:1.15.1")
-    androidTestImplementation("com.google.dagger:hilt-android-testing:2.51.1")
-    kaptAndroidTest("com.google.dagger:hilt-android-compiler:2.51.1")
+    androidTestImplementation("com.google.dagger:hilt-android-testing:2.56")
+    kspAndroidTest("com.google.dagger:hilt-android-compiler:2.56")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     debugImplementation("com.github.koitharu:workinspector:5778dd1747")

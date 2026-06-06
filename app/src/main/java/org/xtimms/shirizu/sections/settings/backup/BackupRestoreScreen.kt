@@ -208,7 +208,7 @@ private fun UpdateProgressIndicator() {
     )
 }
 
-private class BackupRestoreScreenModel @Inject constructor(
+internal class BackupRestoreScreenModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repository: BackupRepository,
 ) : ScreenModel {

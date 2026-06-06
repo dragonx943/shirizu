@@ -43,7 +43,7 @@ class ScrobblerStorage(context: Context, service: ScrobblerService) {
             val str = StringUtil.StringJoiner("\n")
                 .add(value.id)
                 .add(value.nickname)
-                .add(value.avatar)
+                .add(value.avatar ?: "")
                 .add(value.service.name)
                 .complete()
             putString(KEY_USER, str)

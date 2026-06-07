@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
@@ -68,6 +67,7 @@ import org.xtimms.shirizu.sections.settings.storage.StorageScreen
 import org.xtimms.shirizu.sections.settings.storage.StorageScreenModel
 import org.xtimms.shirizu.utils.FileSize
 import org.xtimms.shirizu.utils.lang.Screen
+import androidx.core.net.toUri
 
 @SuppressLint("BatteryLife")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,29 +80,48 @@ object SettingsScreen : Screen() {
 
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         var showBatteryHint by remember {
-            mutableStateOf(!pm.isIgnoringBatteryOptimizations(context.packageName))
+            mutableStateOf(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    !pm.isIgnoringBatteryOptimizations(context.packageName)
+                } else {
+                    false
+                }
+            )
         }
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-        val intent =
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                data = Uri.parse("package:${context.packageName}")
+                data = "package:${context.packageName}".toUri()
             }
+        } else {
+            null
+        }
 
-        val isActivityAvailable: Boolean =
-            if (Build.VERSION.SDK_INT < 33) context.packageManager.queryIntentActivities(
-                intent,
-                PackageManager.MATCH_ALL
-            ).isNotEmpty()
-            else context.packageManager.queryIntentActivities(
-                intent,
-                PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_SYSTEM_ONLY.toLong())
-            ).isNotEmpty()
+        val isActivityAvailable: Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && intent != null) {
+            if (Build.VERSION.SDK_INT < 33) {
+                context.packageManager.queryIntentActivities(
+                    intent,
+                    PackageManager.MATCH_DEFAULT_ONLY
+                ).isNotEmpty()
+            } else {
+                context.packageManager.queryIntentActivities(
+                    intent,
+                    PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                ).isNotEmpty()
+            }
+        } else {
+            false
+        }
 
         val launcher =
             rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-                showBatteryHint = !pm.isIgnoringBatteryOptimizations(context.packageName)
+                showBatteryHint = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    !pm.isIgnoringBatteryOptimizations(context.packageName)
+                } else {
+                    false
+                }
             }
 
         val screenModel = getScreenModel<StorageScreenModel>()
@@ -142,9 +161,10 @@ object SettingsScreen : Screen() {
                             icon = Icons.Outlined.BatterySaver,
                             description = stringResource(R.string.disable_battery_optimization_summary),
                         ) {
-                            launcher.launch(intent)
-                            showBatteryHint =
-                                !pm.isIgnoringBatteryOptimizations(context.packageName)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && intent != null) {
+                                launcher.launch(intent)
+                                showBatteryHint = !pm.isIgnoringBatteryOptimizations(context.packageName)
+                            }
                         }
                     }
                 }

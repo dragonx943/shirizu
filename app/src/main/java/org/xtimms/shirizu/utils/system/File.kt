@@ -15,9 +15,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.PathWalkOption
 import kotlin.io.path.readAttributes
-import kotlin.io.path.walk
 
 fun File.subdir(name: String) = File(this, name).also {
     if (!it.exists()) it.mkdirs()
@@ -35,13 +33,12 @@ suspend fun File.computeSize(): Long = runInterruptible(Dispatchers.IO) {
 
 @OptIn(ExperimentalPathApi::class)
 fun File.walkCompat(includeDirectories: Boolean): Sequence<File> {
-    // Use lazy loading on Android 8.0 and later
-    val walk = if (includeDirectories) {
-        toPath().walk(PathWalkOption.INCLUDE_DIRECTORIES)
+    val walk = this.walkTopDown()
+    return if (includeDirectories) {
+        walk
     } else {
-        toPath().walk()
+        walk.filter { it.isFile }
     }
-    return walk.map { it.toFile() }
 }
 
 fun File.children() = FileSequence(this)
@@ -50,8 +47,16 @@ suspend fun File.deleteAwait() = withContext(Dispatchers.IO) {
     delete() || deleteRecursively()
 }
 
-val File.creationTime
-    get() = toPath().readAttributes<BasicFileAttributes>().creationTime().toMillis()
+val File.creationTime: Long
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        try {
+            toPath().readAttributes<BasicFileAttributes>().creationTime().toMillis()
+        } catch (_: Exception) {
+            lastModified()
+        }
+    } else {
+        lastModified()
+    }
 
 fun ZipFile.readText(entry: ZipEntry) = getInputStream(entry).bufferedReader().use {
     it.readText()

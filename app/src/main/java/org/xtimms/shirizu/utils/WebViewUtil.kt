@@ -1,12 +1,12 @@
 package org.xtimms.shirizu.utils
 
 import android.content.Context
-import android.webkit.WebView
+import androidx.webkit.WebViewCompat
 
 object WebViewUtil {
 
     fun getVersion(context: Context): String {
-        val webView = WebView.getCurrentWebViewPackage() ?: return "o_O"
+        val webView = WebViewCompat.getCurrentWebViewPackage(context) ?: return "o_O"
         val pm = context.packageManager
         val label = webView.applicationInfo?.loadLabel(pm) ?: "WebView"
         val version = webView.versionName

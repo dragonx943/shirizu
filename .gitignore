@@ -112,4 +112,11 @@ lint/tmp/
 # Android Profiling
 *.hprof
 
+# Kotlin
+.kotlin/
+.idea/
+
+# Build
+app/build
+
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Kotlin,Android
